@@ -206,7 +206,7 @@ class ObjectTracker:
         # BGR画像をグレー画像に変換
         gray = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
 
-        SCALE = 4
+        SCALE = 2
 
         # 処理時間短縮のため画像を縮小
         height, width = gray.shape[:2]
@@ -320,6 +320,10 @@ class NeckYawPitch(object):
         self.__client.wait_for_result(rospy.Duration(0.1))
         return self.__client.get_result()
 
+
+class normalize():
+    def __init__(self):
+        return
 
 def hook_shutdown():
     # shutdown時に0度へ戻る
@@ -444,6 +448,7 @@ def main():
 
             for angle in slow_move(current_angle, target_angle, RESET_OPERATION_ANGLE):
                 neck.set_angle(math.radians(angle[0]), math.radians(angle[1]))
+                r.sleep()
 
             time.sleep(3)
 
@@ -452,6 +457,7 @@ def main():
 
             for angle in slow_move(current_angle, target_angle, RESET_OPERATION_ANGLE):
                 neck.set_angle(math.radians(angle[0]), math.radians(angle[1]))
+                r.sleep()
 
         else:
             # ゆっくり初期角度へ戻る
@@ -479,3 +485,4 @@ if __name__ == '__main__':
     object_tracker = ObjectTracker()
 
     main()
+
