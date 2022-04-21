@@ -206,7 +206,7 @@ class ObjectTracker:
         # BGR画像をグレー画像に変換
         gray = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
 
-        SCALE = 2
+        SCALE = 4
 
         # 処理時間短縮のため画像を縮小
         height, width = gray.shape[:2]
@@ -323,7 +323,21 @@ class NeckYawPitch(object):
 
 class normalize():
     def __init__(self):
-        return
+        self.diff = 0
+        self.mul = 0
+
+    def forward(self, x):
+        self.diff = x[0]
+        x = x - self.diff
+        self.mul = np.max(np.abs(x))
+        x = x / self.mul
+        return x
+
+    def backward(self, x):
+        x = x * self.mul
+        x = x + self.diff
+        return x
+
 
 def hook_shutdown():
     # shutdown時に0度へ戻る
@@ -341,6 +355,13 @@ def slow_move(current_angle, target_angle, update_gap):
     update_n = np.ceil(np.max(np.abs(diff_angle)) / update_gap)
 
     updates = np.round(np.linspace(current_angle, target_angle, int(update_n+1)), decimals=1)
+
+    # Cvert into different space
+    r = 3/4  # convert rate 0-1
+    norm = normalize()
+    updates = norm.forward(updates)
+    updates = np.abs(updates)**r * np.sign(updates[-1])
+    updates = norm.backward(updates)
 
     return list(updates)
 
@@ -485,4 +506,3 @@ if __name__ == '__main__':
     object_tracker = ObjectTracker()
 
     main()
-
