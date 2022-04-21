@@ -7,6 +7,7 @@ import sys
 import dlib
 from imutils import face_utils
 import time
+import moveit_commander
 
 # for ObjectTracker
 import cv2
@@ -206,7 +207,7 @@ class ObjectTracker:
         # BGR画像をグレー画像に変換
         gray = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
 
-        SCALE = 4
+        SCALE = 2
 
         # 処理時間短縮のため画像を縮小
         height, width = gray.shape[:2]
@@ -285,7 +286,11 @@ class NeckYawPitch(object):
         self._state_received = False
         self._current_yaw = 0.0  # Degree
         self._current_pitch = 0.0  # Degree
-
+        
+        
+        # self._neck = moveit_commander.MoveGroupCommander("neck_group")
+        
+        
     def _state_callback(self, state):
         # 首の現在角度を取得
 
@@ -409,13 +414,14 @@ def main():
     detection_timestamp = rospy.Time.now()
 
     while not rospy.is_shutdown():
+        object_position = object_tracker.get_object_position()
 
         if object_tracker.object_detected():
             detection_timestamp = rospy.Time.now()
             position_map = []
             past_time = 0
 
-            while past_time < 5.0:
+            while past_time < 2.0:
                 object_position = object_tracker.get_object_position()
                 position_map.append([object_position.x, object_position.y])
                 past_time = (rospy.Time.now() - detection_timestamp).to_sec()
@@ -425,7 +431,7 @@ def main():
 
             target_loc = np.where(H == np.amax(H))
 
-            if (target_loc[0] in range(3, 6)) & (target_loc[1] in range(3, 6)):
+            if (target_loc[0] in range(3, 6)) or (target_loc[1] in range(3, 6)):
                 look_object = False  # person is looking at me.
             else:
                 look_object = True
@@ -469,16 +475,16 @@ def main():
 
             for angle in slow_move(current_angle, target_angle, RESET_OPERATION_ANGLE):
                 neck.set_angle(math.radians(angle[0]), math.radians(angle[1]))
-                r.sleep()
+             
 
-            time.sleep(3)
+            time.sleep(2)
 
             current_angle = [neck.get_current_yaw(), neck.get_current_pitch()]
             target_angle = [INITIAL_YAW_ANGLE, INITIAL_PITCH_ANGLE]
 
             for angle in slow_move(current_angle, target_angle, RESET_OPERATION_ANGLE):
                 neck.set_angle(math.radians(angle[0]), math.radians(angle[1]))
-                r.sleep()
+        
 
         else:
             # ゆっくり初期角度へ戻る
