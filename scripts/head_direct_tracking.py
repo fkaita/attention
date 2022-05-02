@@ -18,6 +18,7 @@ from geometry_msgs.msg import Point
 
 # for NeckYawPitch
 import actionlib
+# control_msgs->  https://github.com/ros-controls/control_msgs
 from control_msgs.msg import (
     FollowJointTrajectoryAction,
     FollowJointTrajectoryGoal,
@@ -286,11 +287,9 @@ class NeckYawPitch(object):
         self._state_received = False
         self._current_yaw = 0.0  # Degree
         self._current_pitch = 0.0  # Degree
-        
-        
-        # self._neck = moveit_commander.MoveGroupCommander("neck_group")
-        
-        
+
+        self._neck = moveit_commander.MoveGroupCommander("neck_group")
+
     def _state_callback(self, state):
         # 首の現在角度を取得
 
@@ -324,6 +323,11 @@ class NeckYawPitch(object):
         self.__client.send_goal(goal)
         self.__client.wait_for_result(rospy.Duration(0.1))
         return self.__client.get_result()
+
+    def set_angle_2(self, yaw_angle, ptich_angle, goal_secs=1):
+        joints = [yaw_angle, ptich_angle]
+        self.neck.set_joint_value_target(joints)
+        self.neck.go()
 
 
 class normalize():
@@ -473,18 +477,21 @@ def main():
             current_angle = [neck.get_current_yaw(), neck.get_current_pitch()]
             target_angle = [yaw_angle, pitch_angle]
 
-            for angle in slow_move(current_angle, target_angle, RESET_OPERATION_ANGLE):
-                neck.set_angle(math.radians(angle[0]), math.radians(angle[1]))
-             
+            neck.set_angle(math.radians(target_angle[0]),
+                           math.radians(target_angle[1]), goal_secs=0.5)
+
+            # for angle in slow_move(current_angle, target_angle, RESET_OPERATION_ANGLE):
+            #     neck.set_angle(math.radians(angle[0]), math.radians(angle[1]))
 
             time.sleep(2)
 
             current_angle = [neck.get_current_yaw(), neck.get_current_pitch()]
             target_angle = [INITIAL_YAW_ANGLE, INITIAL_PITCH_ANGLE]
 
-            for angle in slow_move(current_angle, target_angle, RESET_OPERATION_ANGLE):
-                neck.set_angle(math.radians(angle[0]), math.radians(angle[1]))
-        
+            # for angle in slow_move(current_angle, target_angle, RESET_OPERATION_ANGLE):
+            #     neck.set_angle(math.radians(angle[0]), math.radians(angle[1]))
+            neck.set_angle(math.radians(target_angle[0]),
+                           math.radians(target_angle[1]), goal_secs=0.5)
 
         else:
             # ゆっくり初期角度へ戻る
