@@ -26,10 +26,8 @@ from control_msgs.msg import (
 )
 from trajectory_msgs.msg import JointTrajectoryPoint
 
-# img = cv2.imread('resources/lenna.png')
-
 class ObjectTracker:
-    def __init__(self):
+    def __init__(self):      
         self._bridge = CvBridge()
         self._image_sub = rospy.Subscriber(
             "/sciurus17/camera/color/image_raw", Image, self._image_callback, queue_size=1)
@@ -39,12 +37,11 @@ class ObjectTracker:
         self._object_target = [0, 0]
         self._image_shape = Point()
         self._object_detected = False
-        self.idx = 0
         
         classFile = '/home/sciurus/Documents/data/coco.names'
         with open(classFile, 'rt') as f:
             self.classNames = [line.rstrip() for line in f]
-
+        
         self._CV_MAJOR_VERSION, _, _ = cv2.__version__.split('.')
 
         
@@ -57,16 +54,10 @@ class ObjectTracker:
         # 画像のwidth, heightを取得
         self._image_shape.x = input_image.shape[1]
         self._image_shape.y = input_image.shape[0]
-
-        # オブジェクトの検出
         
-        if self.idx % 10 == 0: #ここの問題ではなさそう
-            output_image = self._detect_object(input_image)
-            self.idx = 0
-        else:
-            self.idx =+ 1
+        self.input_img = input_image
 
-        self._image_pub.publish(self._bridge.cv2_to_imgmsg(output_image, "bgr8"))
+        self._image_pub.publish(self._bridge.cv2_to_imgmsg(input_image, "bgr8"))
         
     def _depth_callback(self, ros_image):
         try:
@@ -116,19 +107,11 @@ class ObjectTracker:
         return self._object_detected
 
 
-    def _detect_object(self, bgr_image):
-        img = bgr_image
-        configPath = '/home/sciurus/Documents/data/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt'
-        weightsPath = '/home/sciurus/Documents/data/frozen_inference_graph.pb'
-        net = cv2.dnn_DetectionModel(weightsPath, configPath)
-        net.setInputSize(320, 320)
-        net.setInputScale(1.0 / 127.5)
-        net.setInputMean((127.5, 127.5, 127.5))
-        net.setInputSwapRB(True)
-        
-      
+    def _detect_object(self, net):
+        img = self.input_img
         
         classIds, confs, bbox = net.detect(img, confThreshold=0.5)
+
         if len(classIds) != 0:
             for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
                 
@@ -153,9 +136,16 @@ class ObjectTracker:
 
 def main():
     r = rospy.Rate(10)
+    configPath = '/home/sciurus/Documents/data/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt'
+    weightsPath = '/home/sciurus/Documents/data/frozen_inference_graph.pb'
+    net = cv2.dnn_DetectionModel(weightsPath, configPath)
+    net.setInputSize(320, 320)
+    net.setInputScale(1.0 / 127.5)
+    net.setInputMean((127.5, 127.5, 127.5))
+    net.setInputSwapRB(True)
 
     while not rospy.is_shutdown():
-        object_position = object_tracker.get_object_position()
+        object_position = object_tracker._detect_object(net)
     
     
     
