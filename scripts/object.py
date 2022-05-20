@@ -209,7 +209,7 @@ class ObjectTracker:
 
     def _detect_head_direct(self):
 
-        img = self.input_img
+        bgr_image = self.input_img
 
         detector = dlib.get_frontal_face_detector()
         predictor = dlib.shape_predictor(
