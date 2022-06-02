@@ -132,8 +132,7 @@ class ObjectTracker:
 
                 center = [int((box[0]+box[2])/2), int((box[1]+box[3])/2)]
                 size = int(self.dist_target_size/2)
-                target_depth = self.depth_img[center[0] -
-                                              size:center[0]+size, center[1]-size:center[1]+size]
+                target_depth = self.depth_img[center[0]-size:center[0]+size, center[1]-size:center[1]+size]
 #                target_depth = self.round_base * np.round(target_depth/self.round_base)
 #                val, count = np.unique(target_depth, return_counts=True)
 #                distance_mm = val[np.argmax(count)]
@@ -292,9 +291,9 @@ def main():
     net.setInputSwapRB(True)
 
     while not rospy.is_shutdown():
-        #        object_position = object_tracker._detect_object(net)
+        object_position = object_tracker._detect_object(net)
         #        object_position = object_tracker._detect_lblue_object()
-        object_position = object_tracker._detect_head_direct()
+#        object_position = object_tracker._detect_head_direct()
 
 
 if __name__ == '__main__':
