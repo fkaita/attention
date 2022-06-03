@@ -66,9 +66,10 @@ def main():
     
     
     # 掴む準備をする
+    # 0.1 is 10cm
     target_pose = geometry_msgs.msg.Pose()
-    target_pose.position.x = 0.0
-    target_pose.position.y = -0.2
+    target_pose.position.x = 0.5
+    target_pose.position.y = -0.4
     target_pose.position.z = 0.4
 #    q = quaternion_from_euler(3.14/2.0, 0.0, 0.0)  # 上方から掴みに行く場合
     q = quaternion_from_euler(0.0, 0.0, 3.14/2)

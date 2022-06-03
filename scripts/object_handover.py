@@ -1,8 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 import rospy
-import math
 import sys
 import dlib
 from imutils import face_utils
@@ -17,15 +16,6 @@ import numpy as np
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import Point
-
-# for NeckYawPitch
-import actionlib
-from control_msgs.msg import (
-    FollowJointTrajectoryAction,
-    FollowJointTrajectoryGoal,
-    JointTrajectoryControllerState
-)
-from trajectory_msgs.msg import JointTrajectoryPoint
 
 
 class ObjectTracker:
