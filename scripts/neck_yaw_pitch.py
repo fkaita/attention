@@ -19,7 +19,7 @@ from control_msgs.msg import (GripperCommandAction, GripperCommandGoal,
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 
-class NeckYawPitch(object):
+class NeckYawPitch():
     def __init__(self):
         self.__client = actionlib.SimpleActionClient("/sciurus17/controller3/neck_controller/follow_joint_trajectory",
                                                      FollowJointTrajectoryAction)
@@ -110,14 +110,14 @@ class NeckYawPitch(object):
         return self.__client.get_result()
 
 
-def main():
-    return
+#def main():
+#    return
 
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
 
-    try:
-        if not rospy.is_shutdown():
-            main()
-    except rospy.ROSInterruptException:
-        pass
+#    try:
+#        if not rospy.is_shutdown():
+#            main()
+#    except rospy.ROSInterruptException:
+#        pass

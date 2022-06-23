@@ -22,7 +22,7 @@ while not rospy.is_shutdown():
     
     command = String("bb")
     pub.publish(command)
-    time.sleep(5)
+    time.sleep(6)
     
     rate.sleep()
 

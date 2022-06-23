@@ -10,6 +10,7 @@ from imutils import face_utils
 import time
 import moveit_commander
 import geometry_msgs.msg
+from std_msgs.msg import String
 import rosnode
 import actionlib
 from tf.transformations import quaternion_from_euler
@@ -27,6 +28,8 @@ def main():
     gripper.wait_for_server()
     gripper_goal = GripperCommandGoal()
     gripper_goal.command.max_effort = 2.0
+    
+    led_pub = rospy.Publisher('neopixel_simple', String , queue_size=1)
 
     rospy.sleep(1.0)
 
@@ -64,13 +67,65 @@ def main():
     
     neck.set_angle(math.radians(0), math.radians(0), 3.0)
     
+    ## Head direct control
+    # オブジェクト追跡のしきい値
+    # 正規化された座標系(px, px)
+    THRESH_X = 0.05
+    THRESH_Y = 0.05
+
+    # 首の初期角度 Degree
+    INITIAL_YAW_ANGLE = 0
+    INITIAL_PITCH_ANGLE = 0
+
+    # 首の制御角度リミット値 Degree
+    MAX_YAW_ANGLE   = 120
+    MIN_YAW_ANGLE   = -120
+    MAX_PITCH_ANGLE = 50
+    MIN_PITCH_ANGLE = -70
+
+    # 首の制御量
+    # 値が大きいほど首を大きく動かす
+    OPERATION_GAIN_X = 4.0 #5
+    OPERATION_GAIN_Y = 4.0
+
+    # 初期角度に戻る時の制御角度 Degree
+    RESET_OPERATION_ANGLE = 3
+    
+    # Horizontal and vertical visual field
+    h_view = 65
+    v_view = 40
+    
+    # 首の制御角度を制限する
+    if yaw_angle > MAX_YAW_ANGLE:
+        yaw_angle = MAX_YAW_ANGLE
+    if yaw_angle < MIN_YAW_ANGLE:
+        yaw_angle = MIN_YAW_ANGLE
+        
+    if pitch_angle > MAX_PITCH_ANGLE:
+        pitch_angle = MAX_PITCH_ANGLE
+    if pitch_angle < MIN_PITCH_ANGLE:
+        pitch_angle = MIN_PITCH_ANGLE
+        
+    yaw_angle = -15
+    pitch_angle = -15
+        
+    neck.set_angle(math.radians(yaw_angle), math.radians(pitch_angle),goal_secs=1.0)
+    
+    command = String("br")
+    led_pub.publish(command)
+    time.sleep(3)
+    
+    command = String("s")
+    led_pub.publish(command)
+
+    
     
     # 掴む準備をする
     # 0.1 is 10cm
     target_pose = geometry_msgs.msg.Pose()
     target_pose.position.x = 0.5
-    target_pose.position.y = -0.4
-    target_pose.position.z = 0.4
+    target_pose.position.y = -0.1
+    target_pose.position.z = 0.6
 #    q = quaternion_from_euler(3.14/2.0, 0.0, 0.0)  # 上方から掴みに行く場合
     q = quaternion_from_euler(0.0, 0.0, 3.14/2)
     target_pose.orientation.x = q[0]
@@ -114,55 +169,17 @@ def main():
     gripper.wait_for_result(rospy.Duration(1.0))
     
     
+    ## LED GREEN
+    command = String("bg")
+    led_pub.publish(command)
+    time.sleep(5)
     
-    ## Head direct control
-    # オブジェクト追跡のしきい値
-    # 正規化された座標系(px, px)
-    THRESH_X = 0.05
-    THRESH_Y = 0.05
-
-    # 首の初期角度 Degree
-    INITIAL_YAW_ANGLE = 0
-    INITIAL_PITCH_ANGLE = 0
-
-    # 首の制御角度リミット値 Degree
-    MAX_YAW_ANGLE   = 120
-    MIN_YAW_ANGLE   = -120
-    MAX_PITCH_ANGLE = 50
-    MIN_PITCH_ANGLE = -70
-
-    # 首の制御量
-    # 値が大きいほど首を大きく動かす
-    OPERATION_GAIN_X = 4.0 #5
-    OPERATION_GAIN_Y = 4.0
-
-    # 初期角度に戻る時の制御角度 Degree
-    RESET_OPERATION_ANGLE = 3
-    
-    # Horizontal and vertical visual field
-    h_view = 65
-    v_view = 40
+    command = String("s")
+    led_pub.publish(command)
     
     
     
     
-    
-    # 首の制御角度を制限する
-    if yaw_angle > MAX_YAW_ANGLE:
-        yaw_angle = MAX_YAW_ANGLE
-    if yaw_angle < MIN_YAW_ANGLE:
-        yaw_angle = MIN_YAW_ANGLE
-        
-    if pitch_angle > MAX_PITCH_ANGLE:
-        pitch_angle = MAX_PITCH_ANGLE
-    if pitch_angle < MIN_PITCH_ANGLE:
-        pitch_angle = MIN_PITCH_ANGLE
-        
-    yaw_angle = -15
-    pitch_angle = -15
-        
-    neck.set_angle(math.radians(yaw_angle), math.radians(pitch_angle))
-
     
 class NeckYawPitch(object):
     def __init__(self):
